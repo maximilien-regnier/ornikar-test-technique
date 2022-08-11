@@ -40,50 +40,28 @@ class TemplateManager
             $meetingPoint = MeetingPointRepository::getInstance()->getById($lessonData->meetingPointId);
             $instructorOfLesson = InstructorRepository::getInstance()->getById($lessonData->instructorId);
 
-            if (strpos($text, '[lesson:instructor_link]') !== false) {
-                $text = str_replace('[instructor_link]', 'instructors/' . $instructorOfLesson->id . '-' . urlencode($instructorOfLesson->firstname), $text);
-            }
+            $text = $this->updateText('[lesson:instructor_link]', 'instructors/' . $instructorOfLesson->id . '-' . urlencode($instructorOfLesson->firstname), $text);
 
-            $containsSummaryHtml = strpos($text, '[lesson:summary_html]');
-            $containsSummary = strpos($text, '[lesson:summary]');
+            $text = $this->updateText('[lesson:summary_html]', Lesson::renderHtml($lesson), $text);
 
-            if ($containsSummaryHtml !== false) {
-                $text = str_replace(
-                    '[lesson:summary_html]',
-                    Lesson::renderHtml($lesson),
-                    $text
-                );
-            }
-            if ($containsSummary !== false) {
-                $text = str_replace(
-                    '[lesson:summary]',
-                    Lesson::renderText($lesson),
-                    $text
-                );
-            }
+            $text = $this->updateText('[lesson:summary]', Lesson::renderText($lesson), $text);
 
-            (strpos($text, '[lesson:instructor_name]') !== false) and $text = str_replace('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
-
+            $text = $this->updateText('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
 
             if ($meetingPoint) {
-                if (strpos($text, '[lesson:meeting_point]') !== false)
-                    $text = str_replace('[lesson:meeting_point]', $meetingPoint->name, $text);
+                $text = $this->updateText('[lesson:meeting_point]', $meetingPoint->name, $text);
             }
 
-            if (strpos($text, '[lesson:start_date]') !== false)
-                $text = str_replace('[lesson:start_date]', $lessonData->start_time->format('d/m/Y'), $text);
 
-            if (strpos($text, '[lesson:start_time]') !== false)
-                $text = str_replace('[lesson:start_time]', $lessonData->start_time->format('H:i'), $text);
-
-            if (strpos($text, '[lesson:end_time]') !== false)
-                $text = str_replace('[lesson:end_time]', $lessonData->end_time->format('H:i'), $text);
+            $text = $this->updateText('[lesson:start_date]', $lessonData->start_time->format('d/m/Y'), $text);
+            $text = $this->updateText('[lesson:start_time]', $lessonData->start_time->format('H:i'), $text);
+            $text = $this->updateText('[lesson:end_time]', $lessonData->end_time->format('H:i'), $text);
 
 
             if (isset($data['instructor']) and ($data['instructor'] instanceof Instructor))
-                $text = str_replace('[instructor_link]', 'instructors/' . $data['instructor']->id . '-' . urlencode($data['instructor']->firstname), $text);
+                $text = $this->updateText('[instructor_link]', 'instructors/' . $data['instructor']->id . '-' . urlencode($data['instructor']->firstname), $text);
             else
-                $text = str_replace('[instructor_link]', '', $text);
+                $text = $this->updateText('[instructor_link]', '', $text);
 
             /*
              * USER
@@ -91,13 +69,13 @@ class TemplateManager
              */
             $_user = (isset($data['user']) and ($data['user'] instanceof Learner)) ? $data['user'] : $APPLICATION_CONTEXT->getCurrentUser();
             if ($_user) {
-                (strpos($text, '[user:first_name]') !== false) and $text = str_replace('[user:first_name]', ucfirst(strtolower($_user->firstname)), $text);
+                $text = $this->updateText('[user:first_name]', ucfirst(strtolower($_user->firstname)), $text);
+
             }
 
         } catch (Exception $exception) {
 
         }
-
 
 
         return $text;
@@ -126,4 +104,5 @@ class TemplateManager
     {
         return strpos($text, $textToReplace) !== false;
     }
+
 }
