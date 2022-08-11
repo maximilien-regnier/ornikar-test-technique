@@ -44,21 +44,19 @@ class TemplateManager
             $containsSummaryHtml = strpos($text, '[lesson:summary_html]');
             $containsSummary = strpos($text, '[lesson:summary]');
 
-            if ($containsSummaryHtml !== false || $containsSummary !== false) {
-                if ($containsSummaryHtml !== false) {
-                    $text = str_replace(
-                        '[lesson:summary_html]',
-                        Lesson::renderHtml($_lessonFromRepository),
-                        $text
-                    );
-                }
-                if ($containsSummary !== false) {
-                    $text = str_replace(
-                        '[lesson:summary]',
-                        Lesson::renderText($_lessonFromRepository),
-                        $text
-                    );
-                }
+            if ($containsSummaryHtml !== false) {
+                $text = str_replace(
+                    '[lesson:summary_html]',
+                    Lesson::renderHtml($_lessonFromRepository),
+                    $text
+                );
+            }
+            if ($containsSummary !== false) {
+                $text = str_replace(
+                    '[lesson:summary]',
+                    Lesson::renderText($_lessonFromRepository),
+                    $text
+                );
             }
 
             (strpos($text, '[lesson:instructor_name]') !== false) and $text = str_replace('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
