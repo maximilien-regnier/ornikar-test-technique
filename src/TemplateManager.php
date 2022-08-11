@@ -22,35 +22,37 @@ class TemplateManager
         }
 
         $replaced = clone($tpl);
-        $replaced->subject = $this->computeText($replaced->subject, $data);
-        $replaced->content = $this->computeText($replaced->content, $data);
+        try {
+            $replaced->subject = $this->computeText($replaced->subject, $data);
+            $replaced->content = $this->computeText($replaced->content, $data);
+        } catch (Exception $exception) {
+
+        }
+
 
         return $replaced;
     }
 
+    /**
+     * @throws Exception
+     */
     private function computeText($text, array $data)
     {
+        $this->isLessonDataDefined($data);
 
-        try {
-            $this->isLessonDataDefined($data);
+        $lessonData = $data['lesson'];
 
-            $lessonData = $data['lesson'];
+        $lesson = LessonRepository::getInstance()->getById($lessonData->id);
+        $meetingPoint = MeetingPointRepository::getInstance()->getById($lesson->meetingPointId);
+        $instructorOfLesson = InstructorRepository::getInstance()->getById($lesson->instructorId);
 
-            $lesson = LessonRepository::getInstance()->getById($lessonData->id);
-            $meetingPoint = MeetingPointRepository::getInstance()->getById($lesson->meetingPointId);
-            $instructorOfLesson = InstructorRepository::getInstance()->getById($lesson->instructorId);
+        $text = $this->replaceInstructorInfos($instructorOfLesson, $text);
 
-            $text = $this->replaceInstructorInfos($instructorOfLesson, $text);
+        $text = $this->replaceLessonSummary($lesson, $text);
 
-            $text = $this->replaceLessonSummary($lesson, $text);
+        $text = $this->replaceMeetingInfo($meetingPoint, $lesson, $text);
 
-            $text = $this->replaceMeetingInfo($meetingPoint, $lesson, $text);
-
-            $text = $this->replaceUserInfo($data, $text);
-
-        } catch (Exception $exception) {
-
-        }
+        $text = $this->replaceUserInfo($data, $text);
 
 
         return $text;
