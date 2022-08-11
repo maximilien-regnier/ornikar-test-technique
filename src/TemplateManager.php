@@ -1,4 +1,5 @@
 <?php
+
 namespace App;
 
 use App\Context\ApplicationContext;
@@ -31,18 +32,17 @@ class TemplateManager
 
         $lesson = (isset($data['lesson']) and $data['lesson'] instanceof Lesson) ? $data['lesson'] : null;
 
-        if ($lesson)
-        {
+        if ($lesson) {
             $_lessonFromRepository = LessonRepository::getInstance()->getById($lesson->id);
             $usefulObject = MeetingPointRepository::getInstance()->getById($lesson->meetingPointId);
             $instructorOfLesson = InstructorRepository::getInstance()->getById($lesson->instructorId);
 
-            if(strpos($text, '[lesson:instructor_link]') !== false){
-                $text = str_replace('[instructor_link]',  'instructors/' . $instructorOfLesson->id .'-'.urlencode($instructorOfLesson->firstname), $text);
+            if (strpos($text, '[lesson:instructor_link]') !== false) {
+                $text = str_replace('[instructor_link]', 'instructors/' . $instructorOfLesson->id . '-' . urlencode($instructorOfLesson->firstname), $text);
             }
 
             $containsSummaryHtml = strpos($text, '[lesson:summary_html]');
-            $containsSummary     = strpos($text, '[lesson:summary]');
+            $containsSummary = strpos($text, '[lesson:summary]');
 
             if ($containsSummaryHtml !== false || $containsSummary !== false) {
                 if ($containsSummaryHtml !== false) {
@@ -57,38 +57,40 @@ class TemplateManager
                         '[lesson:summary]',
                         Lesson::renderText($_lessonFromRepository),
                         $text
-                    );}}
+                    );
+                }
+            }
 
-            (strpos($text, '[lesson:instructor_name]') !== false) and $text = str_replace('[lesson:instructor_name]',$instructorOfLesson->firstname,$text);
+            (strpos($text, '[lesson:instructor_name]') !== false) and $text = str_replace('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
         }
 
         if ($lesson->meetingPointId) {
-            if(strpos($text, '[lesson:meeting_point]') !== false)
+            if (strpos($text, '[lesson:meeting_point]') !== false)
                 $text = str_replace('[lesson:meeting_point]', $usefulObject->name, $text);
         }
 
-        if(strpos($text, '[lesson:start_date]') !== false)
+        if (strpos($text, '[lesson:start_date]') !== false)
             $text = str_replace('[lesson:start_date]', $lesson->start_time->format('d/m/Y'), $text);
 
-        if(strpos($text, '[lesson:start_time]') !== false)
+        if (strpos($text, '[lesson:start_time]') !== false)
             $text = str_replace('[lesson:start_time]', $lesson->start_time->format('H:i'), $text);
 
-        if(strpos($text, '[lesson:end_time]') !== false)
+        if (strpos($text, '[lesson:end_time]') !== false)
             $text = str_replace('[lesson:end_time]', $lesson->end_time->format('H:i'), $text);
 
 
-            if (isset($data['instructor'])  and ($data['instructor']  instanceof Instructor))
-                $text = str_replace('[instructor_link]',  'instructors/' . $data['instructor']->id .'-'.urlencode($data['instructor']->firstname), $text);
-            else
-                $text = str_replace('[instructor_link]', '', $text);
+        if (isset($data['instructor']) and ($data['instructor'] instanceof Instructor))
+            $text = str_replace('[instructor_link]', 'instructors/' . $data['instructor']->id . '-' . urlencode($data['instructor']->firstname), $text);
+        else
+            $text = str_replace('[instructor_link]', '', $text);
 
         /*
          * USER
          * [user:*]
          */
-        $_user  = (isset($data['user'])  and ($data['user']  instanceof Learner))  ? $data['user']  : $APPLICATION_CONTEXT->getCurrentUser();
-        if($_user) {
-            (strpos($text, '[user:first_name]') !== false) and $text = str_replace('[user:first_name]'       , ucfirst(strtolower($_user->firstname)), $text);
+        $_user = (isset($data['user']) and ($data['user'] instanceof Learner)) ? $data['user'] : $APPLICATION_CONTEXT->getCurrentUser();
+        if ($_user) {
+            (strpos($text, '[user:first_name]') !== false) and $text = str_replace('[user:first_name]', ucfirst(strtolower($_user->firstname)), $text);
         }
 
         return $text;
