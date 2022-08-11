@@ -82,14 +82,7 @@ class TemplateManager
 
     private function replaceInstructorInfos(Instructor $instructorOfLesson, $text)
     {
-        $text = $this->updateText('[lesson:instructor_link]', 'instructors/' . $instructorOfLesson->id . '-' . urlencode($instructorOfLesson->firstname), $text);
-        $text = $this->updateText('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
-        if (isset($data['instructor']) and ($data['instructor'] instanceof Instructor))
-            $text = $this->updateText('[instructor_link]', 'instructors/' . $data['instructor']->id . '-' . urlencode($data['instructor']->firstname), $text);
-        else
-            $text = $this->updateText('[instructor_link]', '', $text);
-
-        return $text;
+        return $this->updateText('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
     }
 
     private function replaceLessonSummary(Lesson $lesson, $text)
