@@ -6,6 +6,7 @@ use App\Context\ApplicationContext;
 use App\Entity\Instructor;
 use App\Entity\Learner;
 use App\Entity\Lesson;
+use App\Entity\MeetingPoint;
 use App\Entity\Template;
 use App\Repository\InstructorRepository;
 use App\Repository\LessonRepository;
@@ -29,7 +30,6 @@ class TemplateManager
 
     private function computeText($text, array $data)
     {
-        $APPLICATION_CONTEXT = ApplicationContext::getInstance();
 
         try {
             $this->isLessonDataDefined($data);
@@ -37,41 +37,16 @@ class TemplateManager
             $lessonData = $data['lesson'];
 
             $lesson = LessonRepository::getInstance()->getById($lessonData->id);
-            $meetingPoint = MeetingPointRepository::getInstance()->getById($lessonData->meetingPointId);
-            $instructorOfLesson = InstructorRepository::getInstance()->getById($lessonData->instructorId);
+            $meetingPoint = MeetingPointRepository::getInstance()->getById($lesson->meetingPointId);
+            $instructorOfLesson = InstructorRepository::getInstance()->getById($lesson->instructorId);
 
-            $text = $this->updateText('[lesson:instructor_link]', 'instructors/' . $instructorOfLesson->id . '-' . urlencode($instructorOfLesson->firstname), $text);
+            $text = $this->replaceInstructorInfos($instructorOfLesson, $text);
 
-            $text = $this->updateText('[lesson:summary_html]', Lesson::renderHtml($lesson), $text);
+            $text = $this->replaceLessonSummary($lesson, $text);
 
-            $text = $this->updateText('[lesson:summary]', Lesson::renderText($lesson), $text);
+            $text = $this->replaceMeetingInfo($meetingPoint, $lesson, $text);
 
-            $text = $this->updateText('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
-
-            if ($meetingPoint) {
-                $text = $this->updateText('[lesson:meeting_point]', $meetingPoint->name, $text);
-            }
-
-
-            $text = $this->updateText('[lesson:start_date]', $lessonData->start_time->format('d/m/Y'), $text);
-            $text = $this->updateText('[lesson:start_time]', $lessonData->start_time->format('H:i'), $text);
-            $text = $this->updateText('[lesson:end_time]', $lessonData->end_time->format('H:i'), $text);
-
-
-            if (isset($data['instructor']) and ($data['instructor'] instanceof Instructor))
-                $text = $this->updateText('[instructor_link]', 'instructors/' . $data['instructor']->id . '-' . urlencode($data['instructor']->firstname), $text);
-            else
-                $text = $this->updateText('[instructor_link]', '', $text);
-
-            /*
-             * USER
-             * [user:*]
-             */
-            $_user = (isset($data['user']) and ($data['user'] instanceof Learner)) ? $data['user'] : $APPLICATION_CONTEXT->getCurrentUser();
-            if ($_user) {
-                $text = $this->updateText('[user:first_name]', ucfirst(strtolower($_user->firstname)), $text);
-
-            }
+            $text = $this->replaceUserInfo($data, $text);
 
         } catch (Exception $exception) {
 
@@ -105,4 +80,48 @@ class TemplateManager
         return strpos($text, $textToReplace) !== false;
     }
 
+    private function replaceInstructorInfos(Instructor $instructorOfLesson, $text)
+    {
+        $text = $this->updateText('[lesson:instructor_link]', 'instructors/' . $instructorOfLesson->id . '-' . urlencode($instructorOfLesson->firstname), $text);
+        $text = $this->updateText('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
+        if (isset($data['instructor']) and ($data['instructor'] instanceof Instructor))
+            $text = $this->updateText('[instructor_link]', 'instructors/' . $data['instructor']->id . '-' . urlencode($data['instructor']->firstname), $text);
+        else
+            $text = $this->updateText('[instructor_link]', '', $text);
+
+        return $text;
+    }
+
+    private function replaceLessonSummary(Lesson $lesson, $text)
+    {
+        $text = $this->updateText('[lesson:summary_html]', Lesson::renderHtml($lesson), $text);
+        return $this->updateText('[lesson:summary]', Lesson::renderText($lesson), $text);
+    }
+
+    private function replaceMeetingInfo(MeetingPoint $meetingPoint, Lesson $lesson, $text)
+    {
+        $text = $this->updateText('[lesson:meeting_point]', $meetingPoint->name, $text);
+
+        $text = $this->updateText('[lesson:start_date]', $lesson->start_time->format('d/m/Y'), $text);
+        $text = $this->updateText('[lesson:start_time]', $lesson->start_time->format('H:i'), $text);
+        return $this->updateText('[lesson:end_time]', $lesson->end_time->format('H:i'), $text);
+    }
+
+    private function replaceUserInfo($data, $text)
+    {
+        $user = $this->getUser($data);
+        return $this->updateText('[user:first_name]', ucfirst(strtolower($user->firstname)), $text);
+    }
+
+    private function getUser($data)
+    {
+        $APPLICATION_CONTEXT = ApplicationContext::getInstance();
+
+        return $this->checkIfUserDefinedInData($data) ? $data['user'] : $APPLICATION_CONTEXT->getCurrentUser();
+    }
+
+    private function checkIfUserDefinedInData($data): bool
+    {
+        return isset($data['user']) and ($data['user'] instanceof Learner);
+    }
 }
