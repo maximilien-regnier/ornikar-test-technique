@@ -113,7 +113,17 @@ class TemplateManager
         }
     }
 
-    private function replaceText(){
+    private function updateText($textToReplace, $replacementText, $text)
+    {
+        if ($this->checkTextToReplaceExist($textToReplace, $text)) {
+            return str_replace($textToReplace, $replacementText, $text);
+        } else {
+            return $text;
+        }
+    }
 
+    private function checkTextToReplaceExist($textToReplace, $text): bool
+    {
+        return strpos($text, $textToReplace) !== false;
     }
 }
