@@ -30,7 +30,7 @@ class TemplateManager
     {
         $APPLICATION_CONTEXT = ApplicationContext::getInstance();
 
-        $lesson = (isset($data['lesson']) and $data['lesson'] instanceof Lesson) ? $data['lesson'] : null;
+        $lesson = $this->isLessonDefined($data) ? $data['lesson'] : null;
 
         if ($lesson) {
             $_lessonFromRepository = LessonRepository::getInstance()->getById($lesson->id);
@@ -92,5 +92,10 @@ class TemplateManager
         }
 
         return $text;
+    }
+
+    private function isLessonDefined($data): bool
+    {
+        return (isset($data['lesson']) and $data['lesson'] instanceof Lesson);
     }
 }
