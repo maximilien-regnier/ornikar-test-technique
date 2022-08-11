@@ -65,7 +65,7 @@ class TemplateManager
             (strpos($text, '[lesson:instructor_name]') !== false) and $text = str_replace('[lesson:instructor_name]', $instructorOfLesson->firstname, $text);
 
 
-            if ($lesson->meetingPointId) {
+            if ($meetingPoint) {
                 if (strpos($text, '[lesson:meeting_point]') !== false)
                     $text = str_replace('[lesson:meeting_point]', $meetingPoint->name, $text);
             }
