@@ -32,13 +32,13 @@ class TemplateManager
         $APPLICATION_CONTEXT = ApplicationContext::getInstance();
 
         try {
-            $this->isLessonDefined($data);
+            $this->isLessonDataDefined($data);
 
-            $lesson = $data['lesson'];
+            $lessonData = $data['lesson'];
 
-            $_lessonFromRepository = LessonRepository::getInstance()->getById($lesson->id);
-            $usefulObject = MeetingPointRepository::getInstance()->getById($lesson->meetingPointId);
-            $instructorOfLesson = InstructorRepository::getInstance()->getById($lesson->instructorId);
+            $lesson = LessonRepository::getInstance()->getById($lessonData->id);
+            $meetingPoint = MeetingPointRepository::getInstance()->getById($lessonData->meetingPointId);
+            $instructorOfLesson = InstructorRepository::getInstance()->getById($lessonData->instructorId);
 
             if (strpos($text, '[lesson:instructor_link]') !== false) {
                 $text = str_replace('[instructor_link]', 'instructors/' . $instructorOfLesson->id . '-' . urlencode($instructorOfLesson->firstname), $text);
@@ -50,14 +50,14 @@ class TemplateManager
             if ($containsSummaryHtml !== false) {
                 $text = str_replace(
                     '[lesson:summary_html]',
-                    Lesson::renderHtml($_lessonFromRepository),
+                    Lesson::renderHtml($lesson),
                     $text
                 );
             }
             if ($containsSummary !== false) {
                 $text = str_replace(
                     '[lesson:summary]',
-                    Lesson::renderText($_lessonFromRepository),
+                    Lesson::renderText($lesson),
                     $text
                 );
             }
@@ -67,17 +67,17 @@ class TemplateManager
 
             if ($lesson->meetingPointId) {
                 if (strpos($text, '[lesson:meeting_point]') !== false)
-                    $text = str_replace('[lesson:meeting_point]', $usefulObject->name, $text);
+                    $text = str_replace('[lesson:meeting_point]', $meetingPoint->name, $text);
             }
 
             if (strpos($text, '[lesson:start_date]') !== false)
-                $text = str_replace('[lesson:start_date]', $lesson->start_time->format('d/m/Y'), $text);
+                $text = str_replace('[lesson:start_date]', $lessonData->start_time->format('d/m/Y'), $text);
 
             if (strpos($text, '[lesson:start_time]') !== false)
-                $text = str_replace('[lesson:start_time]', $lesson->start_time->format('H:i'), $text);
+                $text = str_replace('[lesson:start_time]', $lessonData->start_time->format('H:i'), $text);
 
             if (strpos($text, '[lesson:end_time]') !== false)
-                $text = str_replace('[lesson:end_time]', $lesson->end_time->format('H:i'), $text);
+                $text = str_replace('[lesson:end_time]', $lessonData->end_time->format('H:i'), $text);
 
 
             if (isset($data['instructor']) and ($data['instructor'] instanceof Instructor))
@@ -106,10 +106,14 @@ class TemplateManager
     /**
      * @throws Exception
      */
-    private function isLessonDefined($data)
+    private function isLessonDataDefined($data)
     {
         if (!(isset($data['lesson']) and $data['lesson'] instanceof Lesson)) {
             throw new Exception('Lesson not found in given data');
         }
+    }
+
+    private function replaceText(){
+
     }
 }
